@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>복리 계산기</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      padding: 36px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      color: #1a202c;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #2d3748;
+      transition: border-color 0.2s;
+      background: white;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #4299e1;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #4299e1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background: #3182ce;
+    }
+
+    .result {
+      display: none;
+      margin-top: 28px;
+      padding: 20px;
+      background: #ebf8ff;
+      border-radius: 12px;
+      border-left: 4px solid #4299e1;
+    }
+
+    .result h2 {
+      font-size: 1rem;
+      color: #2b6cb0;
+      margin-bottom: 14px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 0.9rem;
+      color: #4a5568;
+      border-bottom: 1px solid #bee3f8;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #2b6cb0;
+      margin-top: 4px;
+    }
+
+    .result-row span:last-child {
+      font-weight: 600;
+    }
+
+    .error {
+      color: #e53e3e;
+      font-size: 0.82rem;
+      margin-top: 4px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>복리 계산기</h1>
+
+    <div class="form-group">
+      <label for="principal">원금 (원)</label>
+      <input type="number" id="principal" placeholder="예: 1000000" min="0">
+      <div class="error" id="err-principal">원금을 입력해주세요.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="rate">연 이율 (%)</label>
+      <input type="number" id="rate" placeholder="예: 5" min="0" step="0.01">
+      <div class="error" id="err-rate">이율을 입력해주세요.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="years">기간 (년)</label>
+      <input type="number" id="years" placeholder="예: 10" min="1" step="1">
+      <div class="error" id="err-years">기간을 입력해주세요.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="compound">복리 주기</label>
+      <select id="compound">
+        <option value="1">연 1회</option>
+        <option value="2">반기 1회 (연 2회)</option>
+        <option value="4">분기 1회 (연 4회)</option>
+        <option value="12" selected>월 1회 (연 12회)</option>
+        <option value="365">일 1회 (연 365회)</option>
+      </select>
+    </div>
+
+    <button onclick="calculate()">계산하기</button>
+
+    <div class="result" id="result">
+      <h2>계산 결과</h2>
+      <div class="result-row">
+        <span>원금</span>
+        <span id="res-principal"></span>
+      </div>
+      <div class="result-row">
+        <span>이자 수익</span>
+        <span id="res-interest"></span>
+      </div>
+      <div class="result-row">
+        <span>수익률</span>
+        <span id="res-rate"></span>
+      </div>
+      <div class="result-row">
+        <span>최종 금액</span>
+        <span id="res-total"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function fmt(num) {
+      return Math.round(num).toLocaleString('ko-KR') + '원';
+    }
+
+    function calculate() {
+      const principal = parseFloat(document.getElementById('principal').value);
+      const rate = parseFloat(document.getElementById('rate').value);
+      const years = parseInt(document.getElementById('years').value);
+      const n = parseInt(document.getElementById('compound').value);
+
+      let valid = true;
+
+      ['principal', 'rate', 'years'].forEach(id => {
+        document.getElementById('err-' + id).style.display = 'none';
+      });
+
+      if (!principal || principal <= 0) {
+        document.getElementById('err-principal').style.display = 'block';
+        valid = false;
+      }
+      if (!rate || rate <= 0) {
+        document.getElementById('err-rate').style.display = 'block';
+        valid = false;
+      }
+      if (!years || years <= 0) {
+        document.getElementById('err-years').style.display = 'block';
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      // 복리 공식: A = P * (1 + r/n)^(n*t)
+      const total = principal * Math.pow(1 + (rate / 100) / n, n * years);
+      const interest = total - principal;
+      const returnRate = (interest / principal) * 100;
+
+      document.getElementById('res-principal').textContent = fmt(principal);
+      document.getElementById('res-interest').textContent = fmt(interest);
+      document.getElementById('res-rate').textContent = returnRate.toFixed(2) + '%';
+      document.getElementById('res-total').textContent = fmt(total);
+
+      document.getElementById('result').style.display = 'block';
+    }
+
+    document.querySelectorAll('input').forEach(el => {
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter') calculate();
+      });
+    });
+  </script>
+</body>
+</html>
