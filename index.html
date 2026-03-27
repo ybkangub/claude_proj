@@ -4,57 +4,101 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>복리 계산기</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f0f4f8;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
       padding: 40px 16px;
     }
 
     .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
-      padding: 36px;
-      width: 100%;
-      max-width: 480px;
+      max-width: 720px;
+      margin: 0 auto;
     }
 
     h1 {
-      font-size: 1.6rem;
+      font-size: 1.7rem;
       color: #1a202c;
-      margin-bottom: 28px;
       text-align: center;
+      margin-bottom: 8px;
     }
 
-    .form-group {
+    .subtitle {
+      text-align: center;
+      color: #718096;
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: #e2e8f0;
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #718096;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: white;
+      color: #2b6cb0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 28px;
       margin-bottom: 20px;
     }
 
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ebf4ff;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+
     label {
-      display: block;
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       font-weight: 600;
       color: #4a5568;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     input, select {
-      width: 100%;
-      padding: 10px 14px;
+      padding: 10px 12px;
       border: 1.5px solid #cbd5e0;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: #2d3748;
       transition: border-color 0.2s;
       background: white;
@@ -65,174 +109,564 @@
       border-color: #4299e1;
     }
 
-    button {
-      width: 100%;
+    .error {
+      color: #e53e3e;
+      font-size: 0.78rem;
+      margin-top: 3px;
+      display: none;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f7fafc;
+    }
+
+    .toggle-label { font-size: 0.875rem; color: #4a5568; font-weight: 600; }
+    .toggle-desc { font-size: 0.78rem; color: #a0aec0; }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #cbd5e0;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .slider:before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+
+    .toggle input:checked + .slider { background: #4299e1; }
+    .toggle input:checked + .slider:before { transform: translateX(20px); }
+
+    .extra-field {
+      display: none;
+      margin-top: 10px;
       padding: 12px;
+      background: #f7fafc;
+      border-radius: 8px;
+    }
+
+    .extra-field.show { display: block; }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
       background: #4299e1;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 1rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: background 0.2s;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
-    button:hover {
-      background: #3182ce;
+    .btn:hover { background: #3182ce; }
+    .btn.secondary { background: #718096; margin-top: 8px; }
+    .btn.secondary:hover { background: #4a5568; }
+
+    .result-section { display: none; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
     }
 
-    .result {
-      display: none;
-      margin-top: 28px;
-      padding: 20px;
+    .summary-item {
+      background: #f7fafc;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .summary-item.highlight {
       background: #ebf8ff;
-      border-radius: 12px;
-      border-left: 4px solid #4299e1;
+      border: 2px solid #bee3f8;
     }
 
-    .result h2 {
-      font-size: 1rem;
-      color: #2b6cb0;
-      margin-bottom: 14px;
-    }
-
-    .result-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-      font-size: 0.9rem;
-      color: #4a5568;
-      border-bottom: 1px solid #bee3f8;
-    }
-
-    .result-row:last-child {
-      border-bottom: none;
+    .summary-item .val {
+      font-size: 1.3rem;
       font-weight: 700;
-      font-size: 1rem;
       color: #2b6cb0;
-      margin-top: 4px;
     }
 
-    .result-row span:last-child {
+    .summary-item .lbl {
+      font-size: 0.78rem;
+      color: #718096;
+      margin-top: 3px;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 260px;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: #ebf4ff;
+      color: #2b6cb0;
+      padding: 8px 10px;
+      text-align: right;
+      font-weight: 700;
+    }
+
+    th:first-child { text-align: center; }
+
+    td {
+      padding: 7px 10px;
+      text-align: right;
+      border-bottom: 1px solid #f0f4f8;
+      color: #4a5568;
+    }
+
+    td:first-child { text-align: center; font-weight: 600; color: #2d3748; }
+
+    tr:hover td { background: #f7fafc; }
+
+    .table-wrap {
+      max-height: 320px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
       font-weight: 600;
+      margin-left: 6px;
     }
 
-    .error {
-      color: #e53e3e;
-      font-size: 0.82rem;
-      margin-top: 4px;
-      display: none;
+    .badge-blue { background: #bee3f8; color: #2b6cb0; }
+    .badge-green { background: #c6f6d5; color: #276749; }
+    .badge-red { background: #fed7d7; color: #c53030; }
+
+    @media (max-width: 500px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>복리 계산기</h1>
+<div class="container">
+  <h1>복리 계산기</h1>
+  <p class="subtitle">복리의 마법으로 미래 자산을 계산해보세요</p>
 
-    <div class="form-group">
-      <label for="principal">원금 (원)</label>
-      <input type="number" id="principal" placeholder="예: 1000000" min="0">
-      <div class="error" id="err-principal">원금을 입력해주세요.</div>
-    </div>
-
-    <div class="form-group">
-      <label for="rate">연 이율 (%)</label>
-      <input type="number" id="rate" placeholder="예: 5" min="0" step="0.01">
-      <div class="error" id="err-rate">이율을 입력해주세요.</div>
-    </div>
-
-    <div class="form-group">
-      <label for="years">기간 (년)</label>
-      <input type="number" id="years" placeholder="예: 10" min="1" step="1">
-      <div class="error" id="err-years">기간을 입력해주세요.</div>
-    </div>
-
-    <div class="form-group">
-      <label for="compound">복리 주기</label>
-      <select id="compound">
-        <option value="1">연 1회</option>
-        <option value="2">반기 1회 (연 2회)</option>
-        <option value="4">분기 1회 (연 4회)</option>
-        <option value="12" selected>월 1회 (연 12회)</option>
-        <option value="365">일 1회 (연 365회)</option>
-      </select>
-    </div>
-
-    <button onclick="calculate()">계산하기</button>
-
-    <div class="result" id="result">
-      <h2>계산 결과</h2>
-      <div class="result-row">
-        <span>원금</span>
-        <span id="res-principal"></span>
-      </div>
-      <div class="result-row">
-        <span>이자 수익</span>
-        <span id="res-interest"></span>
-      </div>
-      <div class="result-row">
-        <span>수익률</span>
-        <span id="res-rate"></span>
-      </div>
-      <div class="result-row">
-        <span>최종 금액</span>
-        <span id="res-total"></span>
-      </div>
-    </div>
+  <!-- 탭 -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('calc')">일반 계산</button>
+    <button class="tab" onclick="switchTab('target')">목표 역산</button>
   </div>
 
-  <script>
-    function fmt(num) {
-      return Math.round(num).toLocaleString('ko-KR') + '원';
+  <!-- 일반 계산 탭 -->
+  <div id="tab-calc">
+    <div class="card">
+      <div class="card-title">기본 설정</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>원금 (원)</label>
+          <input type="number" id="principal" placeholder="예: 10000000" min="0">
+          <div class="error" id="err-principal">원금을 입력해주세요.</div>
+        </div>
+        <div class="form-group">
+          <label>연 이율 (%)</label>
+          <input type="number" id="rate" placeholder="예: 5" min="0" step="0.01">
+          <div class="error" id="err-rate">이율을 입력해주세요.</div>
+        </div>
+        <div class="form-group">
+          <label>기간 (년)</label>
+          <input type="number" id="years" placeholder="예: 10" min="1" max="100" step="1">
+          <div class="error" id="err-years">기간을 입력해주세요.</div>
+        </div>
+        <div class="form-group">
+          <label>복리 주기</label>
+          <select id="compound">
+            <option value="1">연 1회</option>
+            <option value="2">반기 1회</option>
+            <option value="4">분기 1회</option>
+            <option value="12" selected>월 1회</option>
+            <option value="365">일 1회</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">추가 옵션</div>
+
+      <!-- 월 적립 -->
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">월 적립금 <span class="badge badge-blue">3번</span></div>
+          <div class="toggle-desc">매달 일정 금액을 추가 납입</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-monthly" onchange="toggleField('monthly')">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="extra-field" id="field-monthly">
+        <label>월 납입액 (원)</label>
+        <input type="number" id="monthly" placeholder="예: 300000" min="0" style="margin-top:5px">
+      </div>
+
+      <!-- 인플레이션 -->
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">인플레이션 반영 <span class="badge badge-green">4번</span></div>
+          <div class="toggle-desc">물가 상승률을 고려한 실질 수익 계산</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-inflation" onchange="toggleField('inflation')">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="extra-field" id="field-inflation">
+        <label>연 물가상승률 (%)</label>
+        <input type="number" id="inflation" placeholder="예: 3" min="0" step="0.1" value="3" style="margin-top:5px">
+      </div>
+
+      <!-- 세금 -->
+      <div class="toggle-row" style="border-bottom:none">
+        <div>
+          <div class="toggle-label">이자소득세 공제 <span class="badge badge-red">5번</span></div>
+          <div class="toggle-desc">이자소득세 15.4% 차감 후 실수령액</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-tax" onchange="toggleField('tax')">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="extra-field" id="field-tax">
+        <label>세율 (%)</label>
+        <input type="number" id="tax" value="15.4" min="0" max="100" step="0.1" style="margin-top:5px">
+      </div>
+    </div>
+
+    <button class="btn" onclick="calculate()">계산하기</button>
+  </div>
+
+  <!-- 목표 역산 탭 -->
+  <div id="tab-target" style="display:none">
+    <div class="card">
+      <div class="card-title">목표 금액 역산 <span class="badge badge-blue">2번</span></div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>목표 금액 (원)</label>
+          <input type="number" id="t-goal" placeholder="예: 100000000 (1억)">
+          <div class="error" id="err-t-goal">목표 금액을 입력해주세요.</div>
+        </div>
+        <div class="form-group">
+          <label>연 이율 (%)</label>
+          <input type="number" id="t-rate" placeholder="예: 5" step="0.01">
+          <div class="error" id="err-t-rate">이율을 입력해주세요.</div>
+        </div>
+        <div class="form-group">
+          <label>기간 (년)</label>
+          <input type="number" id="t-years" placeholder="예: 10" min="1">
+          <div class="error" id="err-t-years">기간을 입력해주세요.</div>
+        </div>
+        <div class="form-group">
+          <label>복리 주기</label>
+          <select id="t-compound">
+            <option value="1">연 1회</option>
+            <option value="2">반기 1회</option>
+            <option value="4">분기 1회</option>
+            <option value="12" selected>월 1회</option>
+            <option value="365">일 1회</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>월 적립액 (원, 선택)</label>
+          <input type="number" id="t-monthly" placeholder="0 = 일시납만">
+        </div>
+      </div>
+    </div>
+    <button class="btn" onclick="calcTarget()">필요 원금 계산</button>
+  </div>
+
+  <!-- 결과 -->
+  <div class="result-section" id="result-section">
+    <div class="card" style="margin-top:20px">
+      <div class="card-title" id="result-title">계산 결과</div>
+      <div class="summary-grid" id="summary-grid"></div>
+      <div class="chart-wrap" id="chart-wrap" style="display:none">
+        <canvas id="myChart"></canvas>
+      </div>
+      <div id="table-section"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let chartInstance = null;
+
+function switchTab(tab) {
+  document.getElementById('tab-calc').style.display = tab === 'calc' ? 'block' : 'none';
+  document.getElementById('tab-target').style.display = tab === 'target' ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    el.classList.toggle('active', (tab === 'calc' && i === 0) || (tab === 'target' && i === 1));
+  });
+  document.getElementById('result-section').style.display = 'none';
+}
+
+function toggleField(name) {
+  const el = document.getElementById('field-' + name);
+  el.classList.toggle('show', document.getElementById('toggle-' + name).checked);
+}
+
+function fmt(n) {
+  return Math.round(n).toLocaleString('ko-KR') + '원';
+}
+
+function fmtShort(n) {
+  if (n >= 1e8) return (n / 1e8).toFixed(2) + '억원';
+  if (n >= 1e4) return (n / 1e4).toFixed(0) + '만원';
+  return Math.round(n).toLocaleString('ko-KR') + '원';
+}
+
+function showError(id, show) {
+  document.getElementById(id).style.display = show ? 'block' : 'none';
+}
+
+function renderSummary(items) {
+  document.getElementById('summary-grid').innerHTML = items.map(it =>
+    `<div class="summary-item ${it.highlight ? 'highlight' : ''}">
+      <div class="val">${it.val}</div>
+      <div class="lbl">${it.lbl}</div>
+    </div>`
+  ).join('');
+}
+
+function renderChart(labels, datasets) {
+  const wrap = document.getElementById('chart-wrap');
+  wrap.style.display = 'block';
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(document.getElementById('myChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: datasets.map((d, i) => ({
+        label: d.label,
+        data: d.data,
+        backgroundColor: ['#bee3f8','#c6f6d5','#fed7d7'][i] || '#e2e8f0',
+        borderColor: ['#4299e1','#48bb78','#fc8181'][i] || '#a0aec0',
+        borderWidth: 1,
+        stack: 'stack'
+      }))
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        x: { stacked: true },
+        y: {
+          stacked: true,
+          ticks: { callback: v => fmtShort(v) }
+        }
+      }
+    }
+  });
+}
+
+function renderTable(rows, hasInflation, hasTax) {
+  const extraCols = (hasInflation ? 1 : 0) + (hasTax ? 1 : 0);
+  let th = `<tr><th>년도</th><th>원금 합계</th><th>이자 누계</th>`;
+  if (hasTax) th += `<th>세후 이자</th>`;
+  if (hasInflation) th += `<th>실질 가치</th>`;
+  th += `<th>최종 금액</th></tr>`;
+
+  const trs = rows.map(r => {
+    let td = `<td>${r.year}년</td><td>${fmt(r.principal)}</td><td>${fmt(r.interest)}</td>`;
+    if (hasTax) td += `<td>${fmt(r.afterTax)}</td>`;
+    if (hasInflation) td += `<td>${fmt(r.real)}</td>`;
+    td += `<td><b>${fmt(r.total)}</b></td>`;
+    return `<tr>${td}</tr>`;
+  }).join('');
+
+  document.getElementById('table-section').innerHTML =
+    `<div class="table-wrap"><table><thead>${th}</thead><tbody>${trs}</tbody></table></div>`;
+}
+
+function calculate() {
+  const principal = parseFloat(document.getElementById('principal').value);
+  const rate = parseFloat(document.getElementById('rate').value);
+  const years = parseInt(document.getElementById('years').value);
+  const n = parseInt(document.getElementById('compound').value);
+
+  let valid = true;
+  if (!principal || principal <= 0) { showError('err-principal', true); valid = false; } else showError('err-principal', false);
+  if (!rate || rate <= 0) { showError('err-rate', true); valid = false; } else showError('err-rate', false);
+  if (!years || years <= 0) { showError('err-years', true); valid = false; } else showError('err-years', false);
+  if (!valid) return;
+
+  const useMonthly = document.getElementById('toggle-monthly').checked;
+  const useInflation = document.getElementById('toggle-inflation').checked;
+  const useTax = document.getElementById('toggle-tax').checked;
+
+  const monthly = useMonthly ? (parseFloat(document.getElementById('monthly').value) || 0) : 0;
+  const inflationRate = useInflation ? (parseFloat(document.getElementById('inflation').value) || 3) : 0;
+  const taxRate = useTax ? (parseFloat(document.getElementById('tax').value) || 15.4) / 100 : 0;
+
+  const r = rate / 100;
+  const rows = [];
+  const chartLabels = [];
+  const principalData = [], interestData = [], taxData = [];
+
+  let totalPrincipal = principal;
+
+  for (let y = 1; y <= years; y++) {
+    // 복리 계산 (원금 + 월적립)
+    let total;
+    if (monthly > 0) {
+      // 원금 복리
+      total = principal * Math.pow(1 + r / n, n * y);
+      // 월적립 복리 (적립식 미래가치)
+      const mr = r / 12;
+      total += monthly * ((Math.pow(1 + mr, 12 * y) - 1) / mr);
+      totalPrincipal = principal + monthly * 12 * y;
+    } else {
+      total = principal * Math.pow(1 + r / n, n * y);
+      totalPrincipal = principal;
     }
 
-    function calculate() {
-      const principal = parseFloat(document.getElementById('principal').value);
-      const rate = parseFloat(document.getElementById('rate').value);
-      const years = parseInt(document.getElementById('years').value);
-      const n = parseInt(document.getElementById('compound').value);
+    const interest = total - totalPrincipal;
+    const afterTaxInterest = interest * (1 - taxRate);
+    const afterTaxTotal = useTax ? totalPrincipal + afterTaxInterest : total;
+    const realTotal = afterTaxTotal / Math.pow(1 + inflationRate / 100, y);
 
-      let valid = true;
-
-      ['principal', 'rate', 'years'].forEach(id => {
-        document.getElementById('err-' + id).style.display = 'none';
-      });
-
-      if (!principal || principal <= 0) {
-        document.getElementById('err-principal').style.display = 'block';
-        valid = false;
-      }
-      if (!rate || rate <= 0) {
-        document.getElementById('err-rate').style.display = 'block';
-        valid = false;
-      }
-      if (!years || years <= 0) {
-        document.getElementById('err-years').style.display = 'block';
-        valid = false;
-      }
-
-      if (!valid) return;
-
-      // 복리 공식: A = P * (1 + r/n)^(n*t)
-      const total = principal * Math.pow(1 + (rate / 100) / n, n * years);
-      const interest = total - principal;
-      const returnRate = (interest / principal) * 100;
-
-      document.getElementById('res-principal').textContent = fmt(principal);
-      document.getElementById('res-interest').textContent = fmt(interest);
-      document.getElementById('res-rate').textContent = returnRate.toFixed(2) + '%';
-      document.getElementById('res-total').textContent = fmt(total);
-
-      document.getElementById('result').style.display = 'block';
-    }
-
-    document.querySelectorAll('input').forEach(el => {
-      el.addEventListener('keydown', e => {
-        if (e.key === 'Enter') calculate();
-      });
+    rows.push({
+      year: y,
+      principal: totalPrincipal,
+      interest: useTax ? afterTaxInterest : interest,
+      afterTax: afterTaxInterest,
+      real: realTotal,
+      total: afterTaxTotal
     });
-  </script>
+
+    if (y <= 30 || y % 5 === 0) {
+      chartLabels.push(y + '년');
+      principalData.push(totalPrincipal);
+      interestData.push(Math.round(useTax ? afterTaxInterest : interest));
+    }
+  }
+
+  const finalRow = rows[rows.length - 1];
+  const totalReturn = ((finalRow.total - rows[0].principal) / principal * 100);
+
+  const summaryItems = [
+    { val: fmt(principal), lbl: '초기 원금' },
+    { val: fmt(finalRow.principal), lbl: '납입 원금 합계' },
+    { val: fmt(finalRow.interest), lbl: useTax ? '세후 이자 수익' : '이자 수익' },
+    { val: totalReturn.toFixed(1) + '%', lbl: '총 수익률', highlight: false },
+  ];
+
+  if (useInflation) {
+    summaryItems.push({ val: fmt(finalRow.real), lbl: `실질 가치 (인플레 ${inflationRate}%)` });
+  }
+
+  summaryItems.push({ val: fmt(finalRow.total), lbl: '최종 금액', highlight: true });
+
+  document.getElementById('result-title').textContent = `계산 결과 (${years}년 후)`;
+  renderSummary(summaryItems);
+
+  const datasets = [
+    { label: '원금', data: principalData },
+    { label: useTax ? '세후 이자' : '이자', data: interestData }
+  ];
+  renderChart(chartLabels, datasets);
+  renderTable(rows, useInflation, useTax);
+
+  document.getElementById('result-section').style.display = 'block';
+  document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function calcTarget() {
+  const goal = parseFloat(document.getElementById('t-goal').value);
+  const rate = parseFloat(document.getElementById('t-rate').value);
+  const years = parseInt(document.getElementById('t-years').value);
+  const n = parseInt(document.getElementById('t-compound').value);
+  const monthly = parseFloat(document.getElementById('t-monthly').value) || 0;
+
+  let valid = true;
+  if (!goal || goal <= 0) { showError('err-t-goal', true); valid = false; } else showError('err-t-goal', false);
+  if (!rate || rate <= 0) { showError('err-t-rate', true); valid = false; } else showError('err-t-rate', false);
+  if (!years || years <= 0) { showError('err-t-years', true); valid = false; } else showError('err-t-years', false);
+  if (!valid) return;
+
+  const r = rate / 100;
+  const growthFactor = Math.pow(1 + r / n, n * years);
+
+  let monthlyFV = 0;
+  if (monthly > 0) {
+    const mr = r / 12;
+    monthlyFV = monthly * ((Math.pow(1 + mr, 12 * years) - 1) / mr);
+  }
+
+  const requiredPrincipal = Math.max(0, (goal - monthlyFV) / growthFactor);
+  const totalMonthly = monthly * 12 * years;
+  const totalInput = requiredPrincipal + totalMonthly;
+  const interest = goal - totalInput;
+
+  renderSummary([
+    { val: fmt(requiredPrincipal), lbl: '필요 초기 원금', highlight: true },
+    { val: fmt(monthly > 0 ? monthly : 0), lbl: '월 납입액' },
+    { val: fmt(totalInput), lbl: '총 납입액' },
+    { val: fmt(interest), lbl: '이자 수익' },
+    { val: ((interest / totalInput) * 100).toFixed(1) + '%', lbl: '총 수익률' },
+    { val: fmt(goal), lbl: '목표 금액', highlight: true }
+  ]);
+
+  const wrap = document.getElementById('chart-wrap');
+  wrap.style.display = 'none';
+  document.getElementById('table-section').innerHTML = '';
+  document.getElementById('result-title').textContent = `목표 역산 결과`;
+  document.getElementById('result-section').style.display = 'block';
+  document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+document.querySelectorAll('input').forEach(el => {
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const activeTab = document.getElementById('tab-target').style.display === 'none' ? 'calc' : 'target';
+      activeTab === 'calc' ? calculate() : calcTarget();
+    }
+  });
+});
+</script>
 </body>
 </html>
