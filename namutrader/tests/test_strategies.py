@@ -28,7 +28,7 @@ def make_ohlcv(close_prices: list[float]) -> pd.DataFrame:
     """테스트용 OHLCV DataFrame 생성."""
     n = len(close_prices)
     close = np.array(close_prices, dtype=int)
-    index = pd.date_range(end=pd.Timestamp.now(tz=KST), periods=n, freq="B")
+    index = pd.date_range(end=pd.Timestamp.now(tz=KST), periods=n, freq="D")
     return pd.DataFrame({
         "open":   (close * 0.99).astype(int),
         "high":   (close * 1.01).astype(int),
